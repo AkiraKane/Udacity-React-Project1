@@ -4,6 +4,8 @@ import BooksInfo from "./BooksInfo";
 import * as BooksAPI from "./BooksAPI";
 import PropTypes from "prop-types";
 
+const _ = require("lodash");
+
 class SearchBooks extends Component {
   state = {
     query: "",
@@ -16,12 +18,18 @@ class SearchBooks extends Component {
       query: value,
     }));
 
-    this.searchBooks(value);
+    if (!this.debouncedFn) {
+      this.debouncedFn = _.debounce(() => {
+        this.searchBooks();
+      }, 200);
+    }
+
+    this.debouncedFn();
   };
 
-  searchBooks = (value) => {
-    if (value) {
-      BooksAPI.search(value).then((booksSearchList) => {
+  searchBooks = () => {
+    if (this.state.query) {
+      BooksAPI.search(this.state.query).then((booksSearchList) => {
         if (booksSearchList.length > 0) {
           booksSearchList.forEach((booksSearched) => {
             this.props.booksList.forEach((book) => {
@@ -30,7 +38,6 @@ class SearchBooks extends Component {
               }
             });
           });
-
           this.setState(() => ({ booksSearchList }));
         }
       });
